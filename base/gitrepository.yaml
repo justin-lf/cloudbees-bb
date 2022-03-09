@@ -9,6 +9,7 @@ spec:
     /**/*.txt
     /**/*.sh
   interval: 10m
+  path: "./base/flux"
   url: https://github.com/justin-lf/cloudbees-bb.git
   ref:
     branch: main
