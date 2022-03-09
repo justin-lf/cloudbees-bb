@@ -855,7 +855,7 @@ addons:
     # -- Toggle deployment of SonarQube.
     enabled: false
     git:
-      repo: https://repo1.dso.mil/platform-one/big-bang/apps/developer-tools/sonarqube.git
+      repo: https://repo1.dso.mil/platform-one/big-bang//sonarqube.git
       path: "./chart"
       tag: "9.6.3-bb.14"
 
@@ -1234,7 +1234,7 @@ addons:
 
   cloudbees:
     # -- Toggle deployment of SonarQube.
-    enabled: true
+    enabled: false
     git:
       repo: https://github.com/justin-lf/cloudbees-core.git
       path: "./chart"
