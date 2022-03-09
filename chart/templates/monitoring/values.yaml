@@ -1,0 +1,241 @@
+{{- if .Values.monitoring.enabled }}
+{{- include "values-secret" (dict "root" $ "package" .Values.monitoring "name" "monitoring" "defaults" (include "bigbang.defaults.monitoring" .)) }}
+{{- end }}
+
+{{- define "bigbang.defaults.monitoring" -}}
+# hostname is deprecated and replaced with domain. But if hostname exists then use it.
+{{- $domainName := default .Values.domain .Values.hostname }}
+hostname: {{ $domainName }}
+domain: {{ $domainName }}
+
+{{- $istioInjection := (and (eq (dig "istio" "injection" "enabled" .Values.monitoring) "enabled") .Values.istio.enabled) }}
+
+flux:
+  enabled: true
+
+networkPolicies:
+  enabled: {{ .Values.networkPolicies.enabled }}
+  controlPlaneCidr: {{ .Values.networkPolicies.controlPlaneCidr }}
+  ingressLabels:
+    {{- $gateway := default "public" .Values.monitoring.ingress.gateway }}
+    {{- $default := dict "app" (dig "gateways" $gateway "ingressGateway" nil .Values.istio) "istio" nil }}
+    {{- toYaml (dig "values" "gateways" $gateway "selector" $default .Values.istio) | nindent 4 }}
+
+minioOperator:
+  enabled: {{ .Values.addons.minioOperator.enabled }}
+
+gitlabRunner:
+  enabled: {{ .Values.addons.gitlabRunner.enabled }}
+
+istio:
+  {{- $monitoringInjection := dig "istio" "injection" "enabled" .Values.monitoring }}
+  enabled: {{ .Values.istio.enabled }}
+  prometheus:
+    enabled: true
+    {{- if and .Values.monitoring.sso.enabled (eq $monitoringInjection "disabled") }}
+    service: authservice-haproxy-sso
+    port: 8080
+    namespace: authservice
+    {{- end }}
+    gateways:
+    - istio-system/{{ default "public" .Values.monitoring.ingress.gateway }}
+  alertmanager:
+    enabled: true
+    {{- if and .Values.monitoring.sso.enabled (eq $monitoringInjection "disabled") }}
+    service: authservice-haproxy-sso
+    port: 8080
+    namespace: authservice
+    {{- end }}
+    gateways:
+    - istio-system/{{ default "public" .Values.monitoring.ingress.gateway }}
+  grafana:
+    enabled: true
+    gateways:
+    - istio-system/{{ default "public" .Values.monitoring.ingress.gateway }}
+  injection: {{ dig "istio" "injection" "enabled" .Values.monitoring }}
+
+alertmanager:
+  alertmanagerSpec:
+    # The operator performs a strategic merge to add our imagePullPolicy definition to the default containers
+    # NOTE: This functionality is not actively maintained upstream and may not work in a future monitoring upgrade
+    containers:
+      - name: "alertmanager"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+      - name: "config-reloader"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+    {{- if or .Values.monitoring.sso.enabled $istioInjection }}
+    podMetadata:
+      {{- if .Values.monitoring.sso.enabled }}
+      {{- $alertmanagerAuthserviceKey := (dig "selector" "key" "protect" .Values.addons.authservice.values) }}
+      {{- $alertmanagerAuthserviceValue := (dig "selector" "value" "keycloak" .Values.addons.authservice.values) }}
+      labels:
+        {{ $alertmanagerAuthserviceKey }}: {{ $alertmanagerAuthserviceValue }}
+      {{- end }}
+      {{- if $istioInjection }}
+      annotations:
+        {{ include "istioAnnotation" . }}
+      {{- end }}
+    {{- end }}
+prometheus:
+  prometheusSpec:
+    # The operator performs a strategic merge to add our imagePullPolicy definition to the default containers
+    # NOTE: This functionality is not actively maintained upstream and may not work in a future monitoring upgrade
+    containers:
+      - name: "prometheus"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+      - name: "config-reloader"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+    {{- if or .Values.monitoring.sso.enabled $istioInjection }}
+    podMetadata:
+      {{- if .Values.monitoring.sso.enabled }}
+      {{- $prometheusAuthserviceKey := (dig "selector" "key" "protect" .Values.addons.authservice.values) }}
+      {{- $prometheusAuthserviceValue := (dig "selector" "value" "keycloak" .Values.addons.authservice.values) }}
+      labels:
+        {{ $prometheusAuthserviceKey }}: {{ $prometheusAuthserviceValue }}
+      {{- end }}
+      {{- if $istioInjection }}
+      annotations:
+        {{ include "istioAnnotation" . }}
+      {{- end }}
+    {{- end }}
+
+anchore:
+  enabled: {{ .Values.addons.anchore.enabled }}
+
+kiali:
+  enabled: {{ .Values.kiali.enabled }}
+
+loki:
+  enabled: {{ .Values.loki.enabled }}
+
+global:
+  imagePullSecrets:
+  - name: private-registry
+
+sso:
+  enabled: {{ .Values.monitoring.sso.enabled }}
+
+grafana:
+  image:
+    pullPolicy: {{ .Values.imagePullPolicy }}
+    pullSecrets:
+    - private-registry
+  sidecar:
+    imagePullPolicy: {{ .Values.imagePullPolicy }}
+
+  {{- if $istioInjection }}
+  podAnnotations:
+    {{ include "istioAnnotation" . }}
+  {{- end }}
+
+  {{- if or .Values.loki.enabled .Values.tempo.enabled }}
+  additionalDataSources:
+  {{- if .Values.loki.enabled }}
+  - name: Loki
+    type: loki
+    url: http://logging-loki.logging.svc.cluster.local:3100
+    access: proxy
+  {{- end }}
+  {{- if and .Values.loki.enabled .Values.tempo.enabled }}
+    jsonData:
+      derivedFields:
+        - datasourceName: Tempo
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+  {{- end }}
+  {{- if .Values.tempo.enabled }}
+  - name: Tempo
+    type: tempo
+    access: proxy
+    orgId: 1
+    uid: tempo
+    url: http://tempo-tempo.tempo.svc:3100
+    isDefault: false
+    editable: true
+  {{- end }}
+  {{- end }}
+
+  grafana.ini:
+    {{- if .Values.istio.enabled }}
+    server:
+      root_url: https://grafana.{{ $domainName }}/
+    {{- end }}
+
+    auth:
+      signout_redirect_url: {{ .Values.monitoring.sso.grafana.signout_redirect_url | default (tpl "https://{{ .Values.sso.oidc.host }}/auth/realms/{{ .Values.sso.oidc.realm }}/protocol/openid-connect/logout" .) }}
+
+    auth.generic_oauth:
+      enabled: {{ .Values.monitoring.sso.enabled }}
+      client_id: {{ .Values.monitoring.sso.grafana.client_id }}
+      client_secret: {{ .Values.monitoring.sso.grafana.client_secret }}
+      scopes: {{ .Values.monitoring.sso.grafana.scopes | default "openid profile email" }}
+      auth_url: {{ .Values.monitoring.sso.grafana.auth_url | default (tpl .Values.sso.auth_url .) }}
+      token_url: {{ .Values.monitoring.sso.grafana.token_url | default (tpl .Values.sso.token_url .) }}
+      api_url: {{ .Values.monitoring.sso.grafana.api_url | default (tpl "https://{{ .Values.sso.oidc.host }}/auth/realms/{{ .Values.sso.oidc.realm }}/protocol/openid-connect/userinfo" .) }}
+      allow_sign_up: {{ .Values.monitoring.sso.grafana.allow_sign_up | default "True" }}
+      role_attribute_path: {{ .Values.monitoring.sso.grafana.role_attribute_path | default "Viewer" }}
+    {{- with .Values.monitoring.sso.grafana }}
+      {{- list "allowed_domains" .allowed_domains | include "bigbang.addValueIfSet" | indent 6 }}
+      {{- list "tls_client_ca" .tls_client_ca | include "bigbang.addValueIfSet" | indent 6 }}
+      {{- list "tls_skip_verify_insecure" .tls_skip_verify_insecure | include "bigbang.addValueIfSet" | indent 6 }}
+      {{- list "tls_client_cert" .tls_client_cert | include "bigbang.addValueIfSet" | indent 6 }}
+      {{- list "tls_client_key" .tls_client_key | include "bigbang.addValueIfSet" | indent 6 }}
+    {{- end }}
+
+  {{- if or .Values.loki.enabled .Values.addons.gitlabRunner.enabled }}
+  plugins:
+  {{- if .Values.loki.enabled }}
+    - grafana-piechart-panel
+  {{- end }}
+  {{- if .Values.addons.gitlabRunner.enabled }}
+    - grafana-polystat-panel
+  {{- end }}
+  {{- end }}
+
+prometheus-node-exporter:
+  image:
+    pullPolicy: {{ .Values.imagePullPolicy }}
+  serviceAccount:
+    imagePullSecrets:
+    - name: private-registry
+
+  {{- if $istioInjection }}
+  podAnnotations:
+    {{ include "istioAnnotation" . }}
+  {{- end }}
+
+  {{- if .Values.openshift }}
+  service:
+    targetPort: 9102
+    port: 9102
+  {{- end }}
+
+kube-state-metrics:
+  image:
+    pullPolicy: {{ .Values.imagePullPolicy }}
+  imagePullSecrets:
+  - name: private-registry
+
+  {{- if $istioInjection }}
+  podAnnotations:
+    {{ include "istioAnnotation" . }}
+  {{- end }}
+
+prometheusOperator:
+  image:
+    pullPolicy: {{ .Values.imagePullPolicy }}
+  admissionWebhooks:
+    cleanupProxy:
+      image:
+        pullPolicy: {{ .Values.imagePullPolicy }}
+    patch:
+      image:
+        pullPolicy: {{ .Values.imagePullPolicy }}
+
+  {{- if $istioInjection }}
+  podAnnotations:
+    {{ include "istioAnnotation" . }}
+  {{- end }}
+{{- end -}}

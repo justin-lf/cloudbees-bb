@@ -1,0 +1,18 @@
+{{- if and (not .Values.offline) .Values.cloudbees.enabled }}
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: cloudbees
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: cloudbees
+    app.kubernetes.io/component: "developer-tools"
+    {{- include "commonLabels" . | nindent 4}}
+spec:
+  interval: {{ .Values.flux.interval }}
+  url: {{ .Values.cloudbees.git.repo }}
+  ref:
+    {{- include "validRef" .Values.cloudbees.git | nindent 4 }}
+  {{ include "gitIgnore" . }}
+  {{- include "gitCreds" . | nindent 2 }}
+{{- end }}

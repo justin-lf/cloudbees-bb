@@ -1,0 +1,29 @@
+{{- if or .Values.loki.enabled .Values.promtail.enabled }}
+{{- include "values-secret" (dict "root" $ "package" .Values.loki "name" "loki" "defaults" (include "bigbang.defaults.loki" .)) }}
+{{- end }}
+
+{{- define "bigbang.defaults.loki" -}}
+hostname: {{ .Values.hostname }}
+
+openshift: {{ .Values.openshift }}
+
+istio:
+  enabled: {{ .Values.istio.enabled }}
+
+imagePullSecrets:
+  - name: private-registry
+
+image:
+  pullPolicy: {{ .Values.imagePullPolicy }}
+
+networkPolicies:
+  enabled: {{ .Values.networkPolicies.enabled }}  
+  
+monitoring:
+  enabled: {{ .Values.monitoring.enabled }}   
+
+{{- if .Values.istio.enabled }}
+podAnnotations:
+  {{ include "istioAnnotation" . }}
+{{- end }}
+{{- end -}}

@@ -1,0 +1,52 @@
+{{- if .Values.fluentbit.enabled }}
+{{- include "values-secret" (dict "root" $ "package" .Values.fluentbit "name" "fluentbit" "defaults" (include "bigbang.defaults.fluentbit" .)) }}
+{{- end }}
+
+{{- define "bigbang.defaults.fluentbit" -}}
+elasticsearch:
+  host: "logging-ek-es-http"
+  password:
+    secret: "logging-ek-es-elastic-user"
+
+imagePullSecrets:
+  - name: private-registry
+
+image:
+  pullPolicy: {{ .Values.imagePullPolicy }}
+
+networkPolicies:
+  enabled: {{ .Values.networkPolicies.enabled }}
+  controlPlaneCidr: {{ .Values.networkPolicies.controlPlaneCidr }}
+
+
+istio:
+  enabled: {{ .Values.istio.enabled }}
+
+{{- if .Values.monitoring.enabled }}
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 10s
+  scrapeTimeout: 10s
+  selector:
+    prometheus: monitoring-monitoring-kube-prometheus
+
+dashboards:
+  enabled: true
+  labelKey: grafana_dashboard
+  namespace: monitoring
+{{- end }}
+
+{{- if .Values.istio.enabled }}
+podAnnotations:
+  {{ include "istioAnnotation" . }}
+{{- end }}
+
+openshift: {{ .Values.openshift }}
+
+{{- if .Values.openshift }}
+podSecurityContext:
+  seLinuxOptions:
+    type: "spc_t"
+{{- end }}
+{{- end -}}
