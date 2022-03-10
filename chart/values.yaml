@@ -1232,44 +1232,44 @@ addons:
     # -- Post Renderers.  See docs/postrenders.md
     postRenderers: []
 
-  # cloudbees:
-  #   # -- Toggle deployment of SonarQube.
-  #   enabled: false
-  #   git:
-  #     repo: https://github.com/justin-lf/cloudbees-core.git
-  #     path: "./chart"
-  #     tag: "2.319.3.4"
+  cloudbees:
+    # -- Toggle deployment of SonarQube.
+    enabled: false
+    git:
+      repo: https://github.com/justin-lf/cloudbees-core.git
+      path: "./chart"
+      tag: "2.319.3.4"
 
-  #   # -- Flux reconciliation overrides specifically for the Sonarqube Package
-  #   flux: {}
+    # -- Flux reconciliation overrides specifically for the Sonarqube Package
+    flux: {}
 
-  #   # Redirect the package ingress to a specific Istio Gateway (listed in `istio.gateways`).  The default is "public".
-  #   ingress:
-  #     gateway: ""
+    # Redirect the package ingress to a specific Istio Gateway (listed in `istio.gateways`).  The default is "public".
+    ingress:
+      gateway: ""
 
-  #   sso:
-  #     # -- Toggle SAML SSO for SonarQube.
-  #     # Enabling this option will auto-create any required secrets.
-  #     enabled: false
+    sso:
+      # -- Toggle SAML SSO for SonarQube.
+      # Enabling this option will auto-create any required secrets.
+      enabled: false
 
-  #     # -- SonarQube SAML client ID
-  #     client_id: ""
+      # -- SonarQube SAML client ID
+      client_id: ""
 
-  #     # -- SonarQube SSO login button label
-  #     provider_name: ""
+      # -- SonarQube SSO login button label
+      provider_name: ""
 
-  #     # -- SonarQube plaintext SAML sso certificate.
-  #     # example: MITCAYCBFyIEUjNBkqhkiG9w0BA....
-  #     certificate: ""
+      # -- SonarQube plaintext SAML sso certificate.
+      # example: MITCAYCBFyIEUjNBkqhkiG9w0BA....
+      certificate: ""
 
-  #     # -- SonarQube login sso attribute.
-  #     login: login
+      # -- SonarQube login sso attribute.
+      login: login
 
-  #     # -- SonarQube name sso attribute.
-  #     name: name
+      # -- SonarQube name sso attribute.
+      name: name
 
-  #     # -- SonarQube email sso attribute.
-  #     email: email
+      # -- SonarQube email sso attribute.
+      email: email
 
-  #     # -- (optional) SonarQube group sso attribute.
-  #     group: group
+      # -- (optional) SonarQube group sso attribute.
+      group: group
