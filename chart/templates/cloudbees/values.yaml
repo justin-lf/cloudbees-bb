@@ -1,33 +1,33 @@
-{{- if .Values.cloudbees.enabled }}
-{{- include "values-secret" (dict "root" $ "package" .Values.cloudbees "name" "cloudbees" "defaults" (include "bigbang.defaults.twistlock" .)) }}
-{{- end }}
+# {{- if .Values.cloudbees.enabled }}
+# {{- include "values-secret" (dict "root" $ "package" .Values.cloudbees "name" "cloudbees" "defaults" (include "bigbang.defaults.twistlock" .)) }}
+# {{- end }}
 
-{{- define "bigbang.defaults.cloudbees" -}}
-# hostname is deprecated and replaced with domain. But if hostname exists then use it.
-{{- $domainName := default .Values.domain .Values.hostname }}
-hostname: {{ $domainName }}
-domain: {{ $domainName }}
+# {{- define "bigbang.defaults.cloudbees" -}}
+# # hostname is deprecated and replaced with domain. But if hostname exists then use it.
+# {{- $domainName := default .Values.domain .Values.hostname }}
+# hostname: {{ $domainName }}
+# domain: {{ $domainName }}
 
-imagePullSecrets:
-- name: private-registry
+# imagePullSecrets:
+# - name: private-registry
 
-networkPolicies:
-  enabled: {{ .Values.networkPolicies.enabled }}
-  ingressLabels:
-    {{- $gateway := default "public" .Values.cloudbees.ingress.gateway }}
-    {{- $default := dict "app" (dig "gateways" $gateway "ingressGateway" nil .Values.istio) "istio" nil }}
-    {{- toYaml (dig "values" "gateways" $gateway "selector" $default .Values.istio) | nindent 4 }}
-  nodeCidr: {{ .Values.networkPolicies.nodeCidr }}
+# networkPolicies:
+#   enabled: {{ .Values.networkPolicies.enabled }}
+#   ingressLabels:
+#     {{- $gateway := default "public" .Values.cloudbees.ingress.gateway }}
+#     {{- $default := dict "app" (dig "gateways" $gateway "ingressGateway" nil .Values.istio) "istio" nil }}
+#     {{- toYaml (dig "values" "gateways" $gateway "selector" $default .Values.istio) | nindent 4 }}
+#   nodeCidr: {{ .Values.networkPolicies.nodeCidr }}
 
-istio:
-  enabled: {{ .Values.istio.enabled }}
-  console:
-    gateways:
-    - istio-system/{{ default "public" .Values.cloudbees.ingress.gateway }}
+# istio:
+#   enabled: {{ .Values.istio.enabled }}
+#   console:
+#     gateways:
+#     - istio-system/{{ default "public" .Values.cloudbees.ingress.gateway }}
 
-{{- if .Values.istio.enabled }}
-annotations:
-  {{ include "istioAnnotation" . }}
-{{- end }}
+# {{- if .Values.istio.enabled }}
+# annotations:
+#   {{ include "istioAnnotation" . }}
+# {{- end }}
 
-{{- end -}}
+# {{- end -}}
