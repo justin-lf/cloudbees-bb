@@ -8,12 +8,6 @@
 hostname: {{ $domainName }}
 domain: {{ $domainName }}
 
-openshift: {{ .Values.openshift }}
-
-prometheus:
-  servicemonitor:
-    enabled: {{ .Values.monitoring.enabled }}
-
 imagePullSecrets:
 - name: private-registry
 
@@ -35,9 +29,5 @@ istio:
 annotations:
   {{ include "istioAnnotation" . }}
 {{- end }}
-
-console:
-  image:
-    imagePullPolicy: {{ .Values.imagePullPolicy }}
 
 {{- end -}}
