@@ -1,6 +1,6 @@
 apiVersion: v2
 name: bigbang
-version: 1.27.1
+version: main
 description: Big Bang is a declarative, continuous delivery tool for core DoD hardened and approved packages into a Kubernetes cluster.
 
 type: application
@@ -11,7 +11,7 @@ keywords:
 
 home: https://p1.dso.mil/#/products/big-bang
 sources:
-  - https://repo1.dso.mil/platform-one/big-bang/bigbang
+  - https://github.com/justin-lf/cloudbees-bb
 
 maintainers:
   - name: Ryan Garcia
