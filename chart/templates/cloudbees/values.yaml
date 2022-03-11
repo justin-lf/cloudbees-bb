@@ -31,7 +31,4 @@ image:
   pullPolicy: {{ .Values.imagePullPolicy }}
   pullSecret: private-registry
 
-
-{{- end }}
-
 {{- end -}}
