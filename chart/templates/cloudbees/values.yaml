@@ -1,0 +1,37 @@
+{{- if .Values.addons.cloudbees.enabled }}
+{{- include "values-secret" (dict "root" $ "package" .Values.addons.cloudbees "name" "cloudbees" "defaults" (include "bigbang.defaults.sonarqube" .)) }}
+{{- end }}
+
+{{- define "bigbang.defaults.cloudbees" -}}
+# hostname is deprecated and replaced with domain. But if hostname exists then use it.
+{{- $domainName := default .Values.domain .Values.hostname }}
+domain: {{ $domainName }}
+
+# Define variables to help with conditionals later
+{{- $istioInjection := (and (eq (dig "istio" "injection" "enabled" .Values.addons.cloudbees) "enabled") .Values.istio.enabled) }}
+
+istio:
+  enabled: {{ .Values.istio.enabled }}
+  cloudbees:
+    gateways:
+    - istio-system/{{ default "public" .Values.addons.cloudbees.ingress.gateway }}
+  injection: {{ dig "istio" "injection" "enabled" .Values.addons.cloudbees }}
+
+monitoring:
+  enabled: {{ .Values.monitoring.enabled }}
+
+networkPolicies:
+  enabled: {{ .Values.networkPolicies.enabled }}
+  ingressLabels:
+    {{- $gateway := default "public" .Values.addons.cloudbees.ingress.gateway }}
+    {{- $default := dict "app" (dig "gateways" $gateway "ingressGateway" nil .Values.istio) "istio" nil }}
+    {{- toYaml (dig "values" "gateways" $gateway "selector" $default .Values.istio) | nindent 4 }}
+
+image:
+  pullPolicy: {{ .Values.imagePullPolicy }}
+  pullSecret: private-registry
+
+
+{{- end }}
+
+{{- end -}}

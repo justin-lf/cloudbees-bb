@@ -915,6 +915,70 @@ addons:
     # -- Post Renderers.  See docs/postrenders.md
     postRenderers: []
 
+  cloudbees:
+    # -- Toggle deployment of Cloudbees.
+    enabled: false
+    git:
+      repo: https://github.com/justin-lf/cloudbees-core.git
+      path: "./chart"
+      tag: "2.319.3.4"
+
+    # -- Flux reconciliation overrides specifically for the Cloudbees Package
+    flux: {}
+
+    # Redirect the package ingress to a specific Istio Gateway (listed in `istio.gateways`).  The default is "public".
+    ingress:
+      gateway: ""
+
+    sso:
+      # -- Toggle SAML SSO for Cloudbees.
+      # Enabling this option will auto-create any required secrets.
+      enabled: false
+
+      # -- Cloudbees SAML client ID
+      client_id: ""
+
+      # -- Cloudbees SSO login button label
+      provider_name: ""
+
+      # -- Cloudbees plaintext SAML sso certificate.
+      # example: MITCAYCBFyIEUjNBkqhkiG9w0BA....
+      certificate: ""
+
+      # -- Cloudbees login sso attribute.
+      login: login
+
+      # -- Cloudbees name sso attribute.
+      name: name
+
+      # -- Cloudbees email sso attribute.
+      email: email
+
+      # -- (optional) Cloudbees group sso attribute.
+      group: group
+
+    database:
+      # -- Hostname of a pre-existing PostgreSQL database to use for Cloudbees.
+      host: ""
+
+      # -- Port of a pre-existing PostgreSQL database to use for Cloudbees.
+      port: 5432
+
+      # -- Database name to connect to on host.
+      database: ""
+
+      # -- Username to connect as to external database, the user must have all privileges on the database.
+      username: ""
+
+      # -- Database password for the username used to connect to the existing database.
+      password: ""
+
+    # -- Values to passthrough to the cloudbees chart: https://repo1.dso.mil/platform-one/big-bang/apps/developer-tools/sonarqube.git
+    values: {}
+
+    # -- Post Renderers.  See docs/postrenders.md
+    postRenderers: []
+
   # -- Deployment of HAProxy is automatically toggled depending on Monitoring SSO and Monitoring Istio Injection
   haproxy:
     git:

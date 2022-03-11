@@ -1,0 +1,11 @@
+{{- if .Values.addons.cloudbees.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudbees
+  labels:
+    app.kubernetes.io/name: cloudbees
+    app.kubernetes.io/component: "developer-tools"
+    {{- include "commonLabels" . | nindent 4}}
+    istio-injection: {{ dig "istio" "injection" "enabled" .Values.addons.cloudbees }}
+{{- end }}
