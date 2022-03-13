@@ -921,7 +921,7 @@ addons:
     git:
       repo: https://github.com/justin-lf/cloudbees-core.git
       path: "./chart"
-      tag: "2.319.3.4_20"
+      tag: "2.319.3.4_21"
 
     # -- Flux reconciliation overrides specifically for the Cloudbees Package
     flux: {}
