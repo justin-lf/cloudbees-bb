@@ -857,7 +857,7 @@ addons:
     git:
       repo: https://github.com/justin-lf/sonarqube.git
       path: "./chart"
-      tag: "1.0"
+      tag: "1.0-bb"
 
     # -- Flux reconciliation overrides specifically for the Sonarqube Package
     flux: {}
