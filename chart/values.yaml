@@ -921,7 +921,7 @@ addons:
     git:
       repo: https://repo1.dso.mil/platform-one/big-bang/apps/third-party/cloudbees-ci.git
       path: "./chart"
-      tag: "1.0-test"
+      tag: "1.1-test"
 
     # -- Flux reconciliation overrides specifically for the Cloudbees Package
     flux: {}
