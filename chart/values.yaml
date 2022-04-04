@@ -855,9 +855,9 @@ addons:
     # -- Toggle deployment of SonarQube.
     enabled: false
     git:
-      repo: https://github.com/justin-lf/sonarqube.git
+      repo: https://repo1.dso.mil/platform-one/big-bang//sonarqube.git
       path: "./chart"
-      tag: "1.0-bb"
+      tag: "9.6.3-bb.14"
 
     # -- Flux reconciliation overrides specifically for the Sonarqube Package
     flux: {}
@@ -919,9 +919,9 @@ addons:
     # -- Toggle deployment of Cloudbees.
     enabled: false
     git:
-      repo: https://github.com/justin-lf/cloudbees-core.git
+      repo: https://repo1.dso.mil/platform-one/big-bang/apps/third-party/cloudbees-ci.git
       path: "./chart"
-      tag: "2.319.3.4_27"
+      ref: "development"
 
     # -- Flux reconciliation overrides specifically for the Cloudbees Package
     flux: {}
