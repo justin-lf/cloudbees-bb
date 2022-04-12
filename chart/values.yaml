@@ -145,12 +145,12 @@ istio:
     #       service.beta.kubernetes.io/aws-load-balancer-type: nlb
     #       service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 
-    # passthrough-ingressgateway:
-    #   type: "NodePort" # or "LoadBalancer"
-    #   # Node ports are assigned starting from nodePortBase.  The nodePortBase specifies the start of a range of 4 unused node ports.
-    #   # Node port will be assigned as follows: Port 15021 (Status) = nodePortBase, Port 80 = nodePortBase+1, Port 443 = nodePortBase+2, Port 15443 (SNI) = nodePortBase+3
-    #   # Node port base should be in the range from 30000 to 32764
-    #   nodePortBase: 32000  # Alternatively, the kubernetesResourceSpec can be used to configure all port parameters
+    passthrough-ingressgateway:
+      type: "NodePort" # or "LoadBalancer"
+      # Node ports are assigned starting from nodePortBase.  The nodePortBase specifies the start of a range of 4 unused node ports.
+      # Node port will be assigned as follows: Port 15021 (Status) = nodePortBase, Port 80 = nodePortBase+1, Port 443 = nodePortBase+2, Port 15443 (SNI) = nodePortBase+3
+      # Node port base should be in the range from 30000 to 32764
+      nodePortBase: 32000  # Alternatively, the kubernetesResourceSpec can be used to configure all port parameters
 
   gateways:
     public:
@@ -180,15 +180,15 @@ istio:
     #   tls:
     #     key: ""
     #     cert: ""
-    # passthrough:
-    #   ingressGateway: "passthrough-ingressgateway"
-    #   hosts:
-    #   - "*.{{ .Values.domain }}"
-    #   # -- Controls default HTTP/8080 server entry with HTTP to HTTPS Redirect.
-    #   autoHttpRedirect:
-    #     enabled: true
-    #   tls:
-    #     mode: "PASSTHROUGH"
+    passthrough:
+      ingressGateway: "passthrough-ingressgateway"
+      hosts:
+      - "*.{{ .Values.domain }}"
+      # -- Controls default HTTP/8080 server entry with HTTP to HTTPS Redirect.
+      autoHttpRedirect:
+        enabled: true
+      tls:
+        mode: "PASSTHROUGH"
 
   # -- Flux reconciliation overrides specifically for the Istio Package
   flux: {}
