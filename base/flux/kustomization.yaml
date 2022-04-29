@@ -4,18 +4,18 @@ resources:
 
 # update flux components to use ironbank images
 images:
-- name: fluxcd/helm-controller
+- name: ghcr.io/fluxcd/helm-controller
   newName: registry1.dso.mil/ironbank/fluxcd/helm-controller
-  newTag: v0.14.0
-- name: fluxcd/kustomize-controller
+  newTag: v0.17.1
+- name: ghcr.io/fluxcd/kustomize-controller
   newName: registry1.dso.mil/ironbank/fluxcd/kustomize-controller
-  newTag: v0.18.1
-- name: fluxcd/notification-controller
+  newTag: v0.21.1
+- name: ghcr.io/fluxcd/notification-controller
   newName: registry1.dso.mil/ironbank/fluxcd/notification-controller
-  newTag: v0.19.0
-- name: fluxcd/source-controller
+  newTag: v0.22.2
+- name: ghcr.io/fluxcd/source-controller
   newName: registry1.dso.mil/ironbank/fluxcd/source-controller
-  newTag: v0.19.1
+  newTag: v0.21.2
 
 patches:
   - target:
@@ -52,6 +52,7 @@ patches:
                   capabilities:
                     drop:
                       - ALL
+                  $patch: replace
   - target:
       kind: Deployment
       name: helm-controller
@@ -68,10 +69,10 @@ patches:
               resources:
                 limits:
                   cpu: 500m
-                  memory: 750Mi
+                  memory: 1Gi
                 requests:
                   cpu: 500m
-                  memory: 750Mi
+                  memory: 1Gi
   - target:
       kind: Deployment
       name: kustomize-controller

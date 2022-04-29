@@ -11,4 +11,4 @@ spec:
   interval: 10m
   url: https://github.com/justin-lf/cloudbees-bb.git
   ref:
-    branch: main
+     branch: main

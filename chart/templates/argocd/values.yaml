@@ -33,10 +33,20 @@ dex:
   imagePullSecrets:
     - name: private-registry
 
+{{- if and .Values.addons.argocd.redis.host .Values.addons.argocd.redis.port }}
+redis:
+  externalEndpoint: {{ .Values.addons.argocd.redis.host }}:{{ .Values.addons.argocd.redis.port }}
+  enabled: false
+{{- end }}
+
 redis-bb:
+  {{- if and .Values.addons.argocd.redis.host .Values.addons.argocd.redis.port }}
+  enabled: false
+  {{- else }}
+  enabled: true
+  {{- end }}
   image: 
     pullPolicy: {{ .Values.imagePullPolicy }}
-  enabled: true
   auth:
     enabled: false
   {{- if .Values.monitoring.enabled }}
