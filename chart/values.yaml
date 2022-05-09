@@ -1033,7 +1033,7 @@ addons:
     git:
       repo: https://repo1.dso.mil/platform-one/big-bang/apps/third-party/cloudbees-ci.git
       path: "./chart"
-      tag: "1.6-test"
+      ref: "kpt-update"
 
     # -- Flux reconciliation overrides specifically for the Cloudbees Package
     flux: {}
