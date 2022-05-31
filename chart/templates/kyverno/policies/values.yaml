@@ -6,6 +6,8 @@
 
 {{- define "bigbang.defaults.kyvernopolicies" -}}
 
+{{- $deployRestic := (and .Values.addons.velero.enabled (dig "deployRestic" false .Values.addons.velero.values)) }}
+
 waitforready:
   imagePullSecrets:
   - name: private-registry
@@ -180,9 +182,58 @@ policies:
 
   require-non-root-group:
     validationFailureAction: audit
+    {{- if or $deployRestic .Values.twistlock.enabled }}
+    exclude:
+      any:
+      {{- if $deployRestic }}
+      # Velero.  The restic backup tool requires root group access to see the host's runtime pod directory which is
+      # mounted inside velero/restic pods.
+      - resources:
+          namespaces:
+          - velero
+          names:
+          - restic*
+      {{- end }}
+      {{- if .Values.twistlock.enabled }}
+      # Twistlock Defenders run as root to perform real time scanning on the nodes/cluster, including:
+      # - read logs from `/var/log` to watch for malicious processes
+      # - audit modifications to `/etc/passwd` (watching for suspicious changes)
+      # - access the container runtime socket (observing all running containers on a node)
+      - resources:
+          namespaces:
+          - twistlock
+          names:
+          - twistlock-defender-ds*
+      {{- end }}
+    {{- end }}
 
   require-non-root-user:
     validationFailureAction: audit
+    {{- if or $deployRestic .Values.twistlock.enabled }}
+    exclude:
+      any:
+      {{- if $deployRestic }}
+      # Velero.  The restic backup tool requires root user access to the host's runtime pod directory which is
+      # mounted inside velero/restic pods.
+      - resources:
+          namespaces:
+          - velero
+          names:
+          - restic*
+      {{- end }}
+      {{- if .Values.twistlock.enabled }}
+      # Twistlock Defenders run as root to perform real time scanning on the nodes/cluster, including:
+      # - read logs from `/var/log` to watch for malicious processes
+      # - audit modifications to `/etc/passwd` (watching for suspicious changes)
+      # - access the container runtime socket (observing all running containers on a node)
+      - resources:
+          namespaces:
+          - twistlock
+          names:
+          - twistlock-defender-ds*
+      {{- end }}
+
+    {{- end }}
 
   {{- if .Values.twistlock.enabled }}
   restrict-apparmor:
@@ -232,7 +283,7 @@ policies:
 
   restrict-host-path-mount:
     validationFailureAction: enforce
-    {{- if or .Values.fluentbit.enabled .Values.monitoring.enabled .Values.promtail.enabled .Values.twistlock.enabled }}
+    {{- if or .Values.fluentbit.enabled .Values.monitoring.enabled .Values.promtail.enabled .Values.twistlock.enabled $deployRestic }}
     exclude:
       any:
       {{- if or .Values.fluentbit.enabled .Values.promtail.enabled }}
@@ -289,6 +340,16 @@ policies:
           - twistlock
           names:
           - twistlock-defender-ds*
+      {{- end }}
+      {{- if $deployRestic }}
+      # Velero.  The restic backup tool requires root user access to the host's runtime pod directory which is
+      # mounted inside velero/restic pods.  Since the host's pod runtime directory may expose sensitive information, 
+      # it is better to exclude the restic pods than to add the path as allowable mounts
+      - resources:
+          namespaces:
+          - velero
+          names:
+          - restic*
       {{- end }}
     {{- end }}
 
@@ -366,8 +427,23 @@ policies:
           - twistlock-defender-ds*
       {{- end }}
   {{- end }}
+  
+  restrict-user-id:
+    {{- if $deployRestic }}
+    exclude:
+      any:
+      {{- if $deployRestic }}
+      # Velero.  The restic backup tool requires root user access to the host's runtime pod directory which is
+      # mounted inside velero/restic pods.
+      - resources:
+          namespaces:
+          - velero
+          names:
+          - restic*
+        {{- end }}
+    {{- end }}
 
-  {{- if or .Values.fluentbit.enabled .Values.monitoring.enabled .Values.promtail.enabled .Values.twistlock.enabled }}
+  {{- if or .Values.fluentbit.enabled .Values.monitoring.enabled .Values.promtail.enabled .Values.twistlock.enabled $deployRestic }}
   restrict-volume-types:
     exclude:
       any:
@@ -404,6 +480,15 @@ policies:
           - twistlock
           names:
           - twistlock-defender-ds*
+      {{- end }}
+      {{- if $deployRestic }}
+      # Velero.  The restic backup tool requires root user access to the host's runtime pod directory which is
+      # mounted inside velero/restic pods.
+      - resources:
+          namespaces:
+          - velero
+          names:
+          - restic*
       {{- end }}
   {{- end }}
 

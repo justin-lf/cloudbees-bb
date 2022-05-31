@@ -41,7 +41,7 @@ sso:
   jwks: '{\"keys\":[{\"kid\":\"nZUXZDUyyAEKY4dJyargboayGxJmmlrhcoBoik-7040\",\"kty\":\"RSA\",\"alg\":\"RS256\",\"use\":\"sig\",\"n\":\"qAl-BtUwp2ZVl7wix_8-pucv-jTK1L9QGFVW02kPYlFi0frg-OL9XsSB1MsJIEFfnDIZ_psvvWYoZkVnzibgVlfAjOQXyIevOWLpSlUK3BpWFnAfO-0oyQWSsclyE8-xpzTifL75SvbSvDp3JXVBa4UdgV2qsNs7xu99wipQ7cro2lpne5EIHv6eKJMeG1eFQS2DJrI6ydNOLrzHFOA3pAhZRphId6dxYWaKzH_tcR34uQ2gg-IgmGakYLFhG_P2ZrMdPqouej_WFoc9Y9hlHx8NALfA6uYe4aDCbWCTL1V1sZJjzVR7WiTDh7fIogTu_2ukpCOnXX_SaLadoulxLw\",\"e\":\"AQAB\",\"x5c\":[\"MIICoTCCAYkCBgF/iYn0azANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAliYWJ5LXlvZGEwHhcNMjIwMzE0MTc0NDUzWhcNMzIwMzE0MTc0NjMzWjAUMRIwEAYDVQQDDAliYWJ5LXlvZGEwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCoCX4G1TCnZlWXvCLH/z6m5y/6NMrUv1AYVVbTaQ9iUWLR+uD44v1exIHUywkgQV+cMhn+my+9ZihmRWfOJuBWV8CM5BfIh685YulKVQrcGlYWcB877SjJBZKxyXITz7GnNOJ8vvlK9tK8OncldUFrhR2BXaqw2zvG733CKlDtyujaWmd7kQge/p4okx4bV4VBLYMmsjrJ004uvMcU4DekCFlGmEh3p3FhZorMf+1xHfi5DaCD4iCYZqRgsWEb8/Zmsx0+qi56P9YWhz1j2GUfHw0At8Dq5h7hoMJtYJMvVXWxkmPNVHtaJMOHt8iiBO7/a6SkI6ddf9Jotp2i6XEvAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAJwSLJ0eybbeBYPvXnawqpy6JSXJ/MnnRvSGN9tXJ2+d/QXMOEPwJaAaOrvFtpUQxyPELJ8nU/Ukf7AL2zWltsCLiwtTrJkC+BpbZYkb1UsByveBS5wTPfiNkFzHeGg+MxBjiju2y04P4kEngXhQh4ZIUdi+WJjew721nJa/tjrMfnuEsMjxY/tWnzkk8xkGgaApZpGyaj1tOmVH4GR6CeBU6459m/GXmGH5TCGwT3EyfpZ189te+xV73WZR/r2nDlGuuy//w/P4JGHh4lcCwLfPcOOH30otcPAgctyX9Takk4MkVjva+b9S88sGaWPg075bxA2sysmkuqEOULjdXjU=\"],\"x5t\":\"ihEvRimRNSdrnr_Fhnd4OElB3-E\",\"x5t#S256\":\"YNijWPCIhWA5xQTwyIfvlBN-UcMe46Um2ywE-ADiqjM\"}]}'
   oidc:
     host: keycloak.bigbang.dev
-    realm: cloudbees
+    realm: baby-yoda
 
 flux:
   timeout: 20m
@@ -119,6 +119,9 @@ clusterAuditor:
       enabled: true
       cypress:
         envs:
+          cypress_grafana_url: 'https://grafana.bigbang.dev'
+          cypress_prometheus_url: 'https://prometheus.bigbang.dev'
+          cypress_allownodatas: '0'
           cypress_url: 'https://grafana.bigbang.dev/d/YBgRZG6Mz/opa-violations?orgId=1'
 
 gatekeeper:
@@ -149,6 +152,7 @@ gatekeeper:
         parameters:
           excludedResources:
           - nexus-repository-manager/nexus-repository-manager-cypress-test
+          - cluster-auditor/cluster-auditor-cypress-test
           - gitlab/gitlab-cypress-test
           - gitlab/gitlab-runner-cypress-test
           - kiali/kiali-operator-cypress-test
@@ -240,6 +244,7 @@ gatekeeper:
         parameters:
           excludedResources:
           - nexus-repository-manager/nexus-repository-manager-cypress-test
+          - cluster-auditor/cluster-auditor-cypress-test
           - gitlab/gitlab-cypress-test
           - gitlab/gitlab-runner-cypress-test
           - kiali/kiali-operator-cypress-test
@@ -346,6 +351,7 @@ kyvernopolicies:
               namespaces:
               - gitlab
               - kiali
+              - cluster-auditor
               - mattermost
               - nexus-repository-manager
               - keycloak
@@ -362,6 +368,7 @@ kyvernopolicies:
               namespaces:
               - gitlab
               - kiali
+              - cluster-auditor
               - mattermost
               - nexus-repository-manager
               - keycloak
@@ -393,6 +400,7 @@ kyvernopolicies:
               namespaces:
               - gitlab
               - kiali
+              - cluster-auditor
               - mattermost
               - nexus-repository-manager
               - keycloak
@@ -457,6 +465,16 @@ fluentbit:
       privileged: true
     bbtests:
       enabled: true
+    config:
+      inputs: |
+        [INPUT]
+            Name tail
+            Path /var/log/containers/*flux-system*.log
+            Parser containerd
+            Tag kube.*
+            Mem_Buf_Limit 50MB
+            Skip_Long_Lines On
+            storage.type filesystem
 
 loki:
   enabled: false
@@ -502,6 +520,18 @@ tempo:
         requests:
           cpu: 200m
           memory: 128Mi
+    bbtests:
+      enabled: true
+      cypress:
+        artifacts: true
+        envs:
+          cypress_url: 'https://tempo.bigbang.dev'
+          cypress_tempo_datasource: 'http://tempo-tempo.tempo.svc:3100'
+          cypress_check_datasource: 'true'
+          cypress_grafana_url: 'https://grafana.bigbang.dev'
+      scripts:
+        envs:
+          TEMPO_METRICS_URL: 'http://tempo-tempo.tempo.svc:3100'
 
     persistence:
       enabled: true
@@ -687,7 +717,7 @@ addons:
       enabled: false
       client_id: dev_00eb8904-5b88-4c68-ad67-cec0d2e07aa6_gitlab
     flux:
-      timeout: 20m
+      timeout: 30m
     values:
       global:
         rails:
@@ -776,25 +806,8 @@ addons:
           artifacts: true
           envs:
             cypress_baseUrl: https://gitlab.bigbang.dev
-            cypress_gitlab_first_name: "test"
-            cypress_gitlab_last_name: "user"
-            cypress_gitlab_username: "testuser"
-            cypress_gitlab_password: "12345678"
-            cypress_gitlab_email: "testuser@example.com"
-            cypress_gitlab_project: "my-awesome-project"
-          secretEnvs:
-            - name: cypress_adminpassword
-              valueFrom:
-                secretKeyRef:
-                  name: gitlab-gitlab-initial-root-password
-                  key: password
         scripts:
-          image: "registry.dso.mil/platform-one/big-bang/apps/developer-tools/gitlab/bbtests:0.0.3"
           envs:
-            GITLAB_USER: "testuser"
-            GITLAB_PASS: "12345678"
-            GITLAB_EMAIL: "testuser@example.com"
-            GITLAB_PROJECT: "my-awesome-project"
             GITLAB_REPOSITORY: https://gitlab.bigbang.dev
             GITLAB_ORIGIN: https://testuser:12345678@gitlab.bigbang.dev
             GITLAB_REGISTRY: registry.bigbang.dev
@@ -855,8 +868,8 @@ addons:
           size: 256Mi
         resources:
           requests:
-            cpu: 100m
-            memory: 200Mi
+            cpu: 200m
+            memory: 1024Mi
           limits: {}
         metrics:
           resources:
@@ -1006,7 +1019,7 @@ addons:
       account:
         adminPassword: new_admin_password
         currentAdminPassword: admin
-      curlContainerImage: registry1.dso.mil/ironbank/big-bang/base:8.4
+      curlContainerImage: registry1.dso.mil/ironbank/big-bang/base:1.16.0
 
   minioOperator:
     enabled: false

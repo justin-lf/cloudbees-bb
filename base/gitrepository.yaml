@@ -1,4 +1,4 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: GitRepository
 metadata:
   name: bigbang
@@ -9,6 +9,6 @@ spec:
     /**/*.txt
     /**/*.sh
   interval: 10m
-  url: https://github.com/justin-lf/cloudbees-bb.git
+  url: https://repo1.dso.mil/platform-one/big-bang/bigbang.git
   ref:
-     branch: main
+    tag: 1.34.0

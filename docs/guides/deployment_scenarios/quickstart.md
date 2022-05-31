@@ -2,6 +2,11 @@
 
 [[_TOC_]]
 
+## Video Walkthrough
+A 36min speed run video walkthrough of this quickstart can be found on the following 2 mirrored locations:
+* [Google Drive - Video Mirror](https://drive.google.com/file/d/1m1pR0a-lrWr_Wed4EsI8-vimkYfb06GQ/view)
+* [Repo1 - Video Mirror](https://repo1.dso.mil/platform-one/bullhorn-delivery-static-assets/-/blob/master/big_bang/bigbang_quickstart.mp4)
+
 ## Overview
 
 This quick start guide explains in beginner-friendly terminology how to complete the following tasks in under an hour:
@@ -46,7 +51,7 @@ Important limitations of this quick start guide's implementation of k3d to be aw
   * Multiple Ingress Gateways makes a demoable/tinkerable KeyCloak and locally hosted SSO deployment much easier.
   * Multiple Ingress Gateways can be demoed on k3d if configuration tweaks are made, MetalLB is used, and you are developing using a local Linux Desktop. (network connectivity limitations of the implementation would only allow a the web browser on the k3d host server to see the webpages.)
   * If you want to easily demo and tinker with Multiple Ingress Gateways and Keycloak, then MetalLB + k3s (or another non-Dockerized Kubernetes distribution) would be a happy path to look into. (or alternatively create an issue ticket requesting prioritization of a keycloak quick start or better yet a Merge Request.)
-* Access to Container Images Prerequisite is satisfied by using personal image pull credentials and internet connectivity to <registry1.dso.mil>
+* Access to Container Images Prerequisite is satisfied by using personal image pull credentials and internet connectivity to <https://registry1.dso.mil>
 * Customer Controlled Private Git Repo Prerequisite isn't required due to substituting declarative git ops installation of the Big Bang Helm chart with an imperative helm cli based installation.
 * Encrypting Secrets as code Prerequisite is substituted with clear text secrets on your local machine.
 * Installing and Configuring Flux Prerequisite: Not using GitOps for the quick start eliminates the need to configure flux, and installation is covered within this guide.
@@ -100,7 +105,7 @@ The following requirements are recommended for Demonstration Purposes:
       User ubuntu
       StrictHostKeyChecking no   #Useful for vagrant where you'd reuse IP from repeated tear downs
     #########################"""
-    echo "$temp" | sudo tee -a ~/.ssh/config  #tee -a, appends to preexisting config file
+    echo "$temp" | tee -a ~/.ssh/config  #tee -a, appends to preexisting config file
     ```
 
 1. SSH to instance
