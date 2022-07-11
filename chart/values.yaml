@@ -971,7 +971,55 @@ addons:
 
     # -- Post Renderers.  See docs/postrenders.md
     postRenderers: []
+  
+  cloudbees:
+    # -- Toggle deployment of Cloudbees.
+    enabled: false
+    git:
+      repo: https://repo1.dso.mil/platform-one/big-bang/apps/third-party/cloudbees-ci.git
+      path: "./chart"
+      tag: "1.0-test"
 
+    # -- Flux reconciliation overrides specifically for the Cloudbees Package
+    flux: {}
+
+    # Redirect the package ingress to a specific Istio Gateway (listed in `istio.gateways`).  The default is "public".
+    ingress:
+      gateway: ""
+
+    sso:
+      # -- Toggle SAML SSO for Cloudbees.
+      # Enabling this option will auto-create any required secrets.
+      enabled: false
+
+      # -- Cloudbees SAML client ID
+      client_id: ""
+
+      # -- Cloudbees SSO login button label
+      provider_name: ""
+
+      # -- Cloudbees plaintext SAML sso certificate.
+      # example: MITCAYCBFyIEUjNBkqhkiG9w0BA....
+      certificate: ""
+
+      # -- Cloudbees login sso attribute.
+      login: login
+
+      # -- Cloudbees name sso attribute.
+      name: name
+
+      # -- Cloudbees email sso attribute.
+      email: email
+
+      # -- (optional) Cloudbees group sso attribute.
+      group: group
+
+    # -- Values to passthrough to the cloudbees chart: https://repo1.dso.mil/platform-one/big-bang/apps/developer-tools/sonarqube.git
+    values: {}
+
+    # -- Post Renderers.  See docs/postrenders.md
+    postRenderers: []
+    
   sonarqube:
     # -- Toggle deployment of SonarQube.
     enabled: false
