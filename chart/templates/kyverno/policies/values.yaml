@@ -31,6 +31,35 @@ policies:
         {{- end }}
   {{- end }}
 
+  {{- $nodePortIngressGateways := list }}
+  {{- range $name, $values := .Values.istio.ingressGateways }}
+  {{- if eq $values.type "NodePort" }}
+  {{- $nodePortIngressGateways = append $nodePortIngressGateways $name }}
+  {{- end }}
+  {{- end }}
+
+  {{- range $name, $values := .Values.istio.values.ingressGateways }}
+  {{- if eq (dig "k8s" "service" "type" "LoadBalancer" $values) "NodePort" }}
+  {{- $nodePortIngressGateways = append $nodePortIngressGateways $name }}
+  {{- end }}
+  {{- end }}
+
+  {{- if $nodePortIngressGateways }}
+  # Istio services (istio ingress) can create type: NodePort services
+  disallow-nodeport-services:
+    exclude:
+      any:
+      - resources:
+          kinds:
+          - Service
+          names:
+          {{- range $name := $nodePortIngressGateways }}
+          - {{ $name }}
+          {{- end }}
+          namespaces:
+          - "istio-system"
+  {{- end }}
+
   disallow-image-tags:
     validationFailureAction: enforce
 
@@ -160,6 +189,17 @@ policies:
 
   require-drop-all-capabilities:
     validationFailureAction: audit
+    {{- if .Values.addons.gitlab.enabled }}
+    exclude:
+      any:
+      # Gitlab Redis sub-chart does not have configurable securityContext values from upstream. An issue has been opened 
+      # upstream to add these capabilities: https://gitlab.com/gitlab-org/charts/gitlab/-/issues/3375
+      - resources:
+          namespaces:
+          - gitlab
+          names:
+          - gitlab-redis-*
+    {{- end }}
 
   require-istio-on-namespaces:
     enabled: {{ .Values.istio.enabled }}
@@ -182,7 +222,7 @@ policies:
 
   require-non-root-group:
     validationFailureAction: audit
-    {{- if or $deployRestic .Values.twistlock.enabled }}
+    {{- if or $deployRestic .Values.twistlock.enabled .Values.fluentbit.enabled .Values.promtail.enabled .Values.addons.gitlab.enabled }}
     exclude:
       any:
       {{- if $deployRestic }}
@@ -205,11 +245,41 @@ policies:
           names:
           - twistlock-defender-ds*
       {{- end }}
+      {{- if .Values.fluentbit.enabled }}
+      # Fluentbit requires access to journalctl as well as /var/log.  This would require modifications
+      # to the host operating system, creating a user, adding that user to the  systemd-journal user group 
+      # and then granting permissions recursively on /var/log.
+      - resources:
+          namespaces:
+          - logging
+          names:
+          - logging-fluent-bit*
+      {{- end }}
+      {{- if .Values.promtail.enabled }}
+      # promtail requires access to journalctl as well as /var/log.  This would require modifications
+      # to the host operating system, creating a user, adding that user to the  systemd-journal user group 
+      # and then granting permissions recursively on /var/log.
+      # promtail requires access to /run/promtail for its buffering and persistent state.
+      - resources:
+          namespaces:
+          - logging
+          names:
+          - logging-promtail*
+      {{- end }}
+      {{- if .Values.addons.gitlab.enabled }}
+      # Gitlab Redis sub-chart does not have configurable securityContext values from upstream. An issue has been opened 
+      # upstream to add these capabilities: https://gitlab.com/gitlab-org/charts/gitlab/-/issues/3375
+      - resources:
+          namespaces:
+          - gitlab
+          names:
+          - gitlab-redis-*
+      {{- end }}
     {{- end }}
 
   require-non-root-user:
     validationFailureAction: audit
-    {{- if or $deployRestic .Values.twistlock.enabled }}
+    {{- if or $deployRestic .Values.twistlock.enabled .Values.fluentbit.enabled .Values.promtail.enabled .Values.addons.gitlab.enabled }}
     exclude:
       any:
       {{- if $deployRestic }}
@@ -232,7 +302,36 @@ policies:
           names:
           - twistlock-defender-ds*
       {{- end }}
-
+      {{- if .Values.fluentbit.enabled }}
+      # Fluentbit requires access to journalctl as well as /var/log.  This would require modifications
+      # to the host operating system, creating a user, adding that user to the  systemd-journal user group 
+      # and then granting permissions recursively on /var/log.
+      - resources:
+          namespaces:
+          - logging
+          names:
+          - logging-fluent-bit*
+      {{- end }}
+      {{- if .Values.promtail.enabled }}
+      # promtail requires access to journalctl as well as /var/log.  This would require modifications
+      # to the host operating system, creating a user, adding that user to the  systemd-journal user group 
+      # and then granting permissions recursively on /var/log.
+      # promtail requires access to /run/promtail for its buffering and persistent state.
+      - resources:
+          namespaces:
+          - logging
+          names:
+          - logging-promtail*
+      {{- end }}
+      {{- if .Values.addons.gitlab.enabled }}
+      # Gitlab Redis sub-chart does not have configurable securityContext values from upstream. An issue has been opened 
+      # upstream to add these capabilities: https://gitlab.com/gitlab-org/charts/gitlab/-/issues/3375
+      - resources:
+          namespaces:
+          - gitlab
+          names:
+          - gitlab-redis-*
+      {{- end }}
     {{- end }}
 
   {{- if .Values.twistlock.enabled }}
@@ -353,6 +452,12 @@ policies:
       {{- end }}
     {{- end }}
 
+  # NOTE: This restricts the ability to have PVCs when using a local path provisioner storage class (i.e. k3d default).
+  # To override either disable this policy (not ideal) or add an allowed wildcard matching where local paths are provisioned.
+  # See `/docs/example_configs/policy-overrides-k3d.yaml` for an example of how to do this for k3d.
+  restrict-host-path-mount-pv:
+    validationFailureAction: enforce
+
   restrict-host-path-write:
     validationFailureAction: enforce
     {{- if .Values.twistlock.enabled }}
@@ -428,8 +533,8 @@ policies:
       {{- end }}
   {{- end }}
   
+  {{- if $deployRestic }}
   restrict-user-id:
-    {{- if $deployRestic }}
     exclude:
       any:
       {{- if $deployRestic }}
@@ -440,8 +545,8 @@ policies:
           - velero
           names:
           - restic*
-        {{- end }}
-    {{- end }}
+      {{- end }}
+  {{- end }}
 
   {{- if or .Values.fluentbit.enabled .Values.monitoring.enabled .Values.promtail.enabled .Values.twistlock.enabled $deployRestic }}
   restrict-volume-types:

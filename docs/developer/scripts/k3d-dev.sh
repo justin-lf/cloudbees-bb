@@ -451,8 +451,6 @@ else # default is public ip
 fi
 
 # add tools
-echo Installing k9s...
-ssh -i ~/.ssh/${KeyName}.pem -o StrictHostKeyChecking=no ubuntu@${PublicIP} 'curl -sS https://webinstall.dev/k9s | bash'
 echo Installing kubectl...
 ssh -i ~/.ssh/${KeyName}.pem -o StrictHostKeyChecking=no ubuntu@${PublicIP} 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
 ssh -i ~/.ssh/${KeyName}.pem -o StrictHostKeyChecking=no ubuntu@${PublicIP} 'sudo mv /home/ubuntu/kubectl /usr/local/bin/'
@@ -513,16 +511,17 @@ then
   echo "Manually add more hostnames as needed."
   echo "The IPs to use come from the istio-system services of type LOADBALANCER EXTERNAL-IP that are created when Istio is deployed."
   echo "You must use Firefox browser with with manual SOCKs v5 proxy configuration to localhost with port 12345."
+  echo "Also ensure 'Proxy DNS when using SOCKS v5' is checked."
   echo "Or, with other browsers like Chrome you could use a browser plugin like foxyproxy to do the same thing as Firefox."
   echo
 elif [[ "$PRIVATE_IP" == true ]]
 then
   echo "To access apps from a browser edit your /etc/hosts to add the private IP of your instance with application hostnames. Example:"
-  echo "${PrivateIP}	gitlab.bigbang.dev logging.bigbang.dev kibana.bigbang.dev"
+  echo "${PrivateIP}	gitlab.bigbang.dev prometheus.bigbang.dev kibana.bigbang.dev"
   echo
 else   # default is to use the public ip
   echo "To access apps from a browser edit your /etc/hosts to add the public IP of your instance with application hostnames."
   echo "Example:"
-  echo "${PublicIP}	gitlab.bigbang.dev logging.bigbang.dev kibana.bigbang.dev"
+  echo "${PublicIP}	gitlab.bigbang.dev prometheus.bigbang.dev kibana.bigbang.dev"
   echo
 fi
